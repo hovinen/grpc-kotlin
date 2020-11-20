@@ -3,11 +3,19 @@ plugins {
     kotlin("android")
 }
 
+val composeVersion = "1.0.0-alpha03"
+
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("androidx.appcompat:appcompat:1.2.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.8")
+    implementation("androidx.compose.foundation:foundation-layout:$composeVersion")
+    implementation("androidx.compose.material:material:$composeVersion")
+    implementation("androidx.compose.runtime:runtime:$composeVersion")
+    implementation("androidx.compose.ui:ui:$composeVersion")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1")
     implementation(project(":stub-android"))
+
     runtimeOnly("io.grpc:grpc-okhttp:${rootProject.ext["grpcVersion"]}")
 }
 
@@ -33,7 +41,23 @@ android {
     sourceSets["main"].java.srcDir("src/main/kotlin")
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_7
-        targetCompatibility = JavaVersion.VERSION_1_7
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerVersion = org.jetbrains.kotlin.config.KotlinCompilerVersion.VERSION.toString()
+        kotlinCompilerExtensionVersion = composeVersion
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        freeCompilerArgs = listOf("-Xallow-jvm-ir-dependencies", "-Xskip-prerelease-check")
     }
 }
