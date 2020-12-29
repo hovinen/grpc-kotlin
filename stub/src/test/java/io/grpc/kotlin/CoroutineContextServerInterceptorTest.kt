@@ -3,6 +3,9 @@ package io.grpc.kotlin
 import com.google.common.truth.Truth.assertThat
 import io.grpc.ServerCall
 import io.grpc.ServerInterceptors
+import io.grpc.Status
+import io.grpc.StatusException
+import io.grpc.StatusRuntimeException
 import io.grpc.examples.helloworld.GreeterGrpcKt.GreeterCoroutineImplBase
 import io.grpc.examples.helloworld.GreeterGrpcKt.GreeterCoroutineStub
 import io.grpc.examples.helloworld.HelloReply
@@ -95,6 +98,23 @@ class CoroutineContextServerInterceptorTest : AbstractCallsTest() {
 
     runBlocking {
       assertThat(client.sayHello(helloRequest("")).message).isEqualTo("interceptor")
+    }
+  }
+
+  @Test
+  fun `StatusException thrown from coroutineContext closes call`() {
+    val interceptor = object : CoroutineContextServerInterceptor() {
+      override fun coroutineContext(
+        call: ServerCall<*, *>,
+        headers: GrpcMetadata
+      ): CoroutineContext = throw StatusException(Status.INTERNAL.withDescription("An error"))
+    }
+
+    val channel = makeChannel(HelloReplyWithContextMessage("server"), interceptor)
+    val client = GreeterCoroutineStub(channel)
+
+    runBlocking {
+      assertThrows<StatusException> { client.sayHello(helloRequest("")) }
     }
   }
 }
